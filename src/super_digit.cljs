@@ -10,7 +10,8 @@
   )
 
 (defn sp_of_concatenated [n k]
-      (Integer/parseInt (super_digit (nth (iterate #(str n %) (str n)) (- k 1))))
+      (let [sum (sum_digits (str n))]
+           (Integer/parseInt (super_digit (str (* sum k)))))
       )
 
 (let [line (read-line)
