@@ -2,6 +2,7 @@
 
 (defn query
   [tree-state rule iterations-number path]
+   ; Helper functions
    (defn get-node-value [path]
      )
    (defn get-node-new-state [path]
@@ -10,6 +11,8 @@
      )
    (defn get-neighbours-paths [path exclude-path]
      )
+   ; Gets new state of path node and its neighbours and their neighbours and so on, according to neighbours-depth:
+   ;  for neighbours-depth = 1 - path node and its neighbours, 2 - section 1 and path node neighbours neighbours and so on
    (defn get-tree-new-state
      ([neighbours-depth path]
       (get-tree-new-state neighbours-depth path {} nil))
@@ -17,11 +20,13 @@
       (if (= neighbours-depth 0)
         tree-new-state
         ((def tree-new-state (override-neighbours-states path tree-new-state))
-         (let [neighbours-paths (get-neighbours-paths path exclude-path)
-               i 0]
-           (while [(< i (count neighbours-paths))]
-             [(def tree-new-state (recur (- neighbours-depth 1) (neighbours-paths i) tree-new-state path))])
-           tree-new-state)))))
+         (if (= neighbours-depth 1)
+           tree-new-state
+           (let [neighbours-paths (get-neighbours-paths path exclude-path)
+                 i 0]
+             (while [(< i (count neighbours-paths))]
+               [(def tree-new-state (recur (- neighbours-depth 1) (neighbours-paths i) tree-new-state path))])
+             tree-new-state)))))
    ; query function body
    (if (= iterations-number 0)
      (get-node-value path)
@@ -29,7 +34,7 @@
        (get-node-new-state path)
        (let [neighbours-depth (- iterations-number 1)
              tree-new-state (get-tree-new-state neighbours-depth path)]
-           (recur tree-new-state rule (- iterations-number 1) path))))))
+           (recur tree-new-state rule (- iterations-number 1) path)))))
 
 (defn play-query [tree-state rule]
   (let [input-query read-line
