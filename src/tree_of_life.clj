@@ -13,20 +13,11 @@
      )
    ; Gets new state of path node and its neighbours and their neighbours and so on, according to neighbours-depth:
    ;  for neighbours-depth = 1 - path node and its neighbours, 2 - section 1 and path node neighbours neighbours and so on
-   (defn get-tree-new-state
-     ([neighbours-depth path]
-      (get-tree-new-state neighbours-depth path {} nil))
-     ([neighbours-depth path tree-new-state exclude-path]
-      (if (= neighbours-depth 0)
-        tree-new-state
-        ((def tree-new-state (override-neighbours-states path tree-new-state))
-         (if (= neighbours-depth 1)
-           tree-new-state
-           (let [neighbours-paths (get-neighbours-paths path exclude-path)
-                 i 0]
-             (while [(< i (count neighbours-paths))]
-               [(def tree-new-state (recur (- neighbours-depth 1) (neighbours-paths i) tree-new-state path))])
-             tree-new-state)))))
+   (defn get-tree-new-state [neighbours-depth path]
+      (merge (for [nodep (distinct (concat (take neighbours-depth
+                                                 (iterate #(concat (for [x %] (get-neighbours-paths x)))
+                                                          (concat (get-neighbours-paths path) path)))))]
+        {nodep (get-node-new-state nodep)})))
    ; query function body
    (if (= iterations-number 0)
      (get-node-value path)
