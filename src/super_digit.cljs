@@ -10,12 +10,12 @@
   )
 
 (defn sp_of_concatenated [n k]
-      (let [sum (sum_digits (str n))]
-           (Integer/parseInt (super_digit (str (* sum k)))))
+      (let [sum (sum_digits n)]
+           (Integer/parseInt (super_digit (str (* sum (Integer/parseInt k))))))
       )
 
 (let [line (read-line)
-      line_vector (map #(Integer/parseInt %) (str/split line #" "))
+      line_vector (str/split line #" ")
       n (nth line_vector 0)
       k (nth line_vector 1)]
       (sp_of_concatenated n k)
