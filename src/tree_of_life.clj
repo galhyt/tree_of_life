@@ -4,19 +4,21 @@
   [tree-state rule iterations-number path]
    ; Helper functions
    (defn get-node-value [path]
-     )
+     (get tree-state path))
    (defn get-node-new-state [path]
-     )
-   (defn override-neighbours-states [path tree-new-state]
-     )
-   (defn get-neighbours-paths [path exclude-path]
-     )
+     (let [neighbours (get-neighbours-paths path)]
+     (get rule (str/join "" (map #(if (= % nil) "." (get-node-value %)) (concat (take 2 neighbours) [path] (last neighbours)))))))
+   (defn get-neighbours-paths [path]
+     (let [parent (if (not= path []) (drop-last path) nil)
+           left (concat path "<")
+           right (concat path ">")]
+       [parent left right]))
    ; Gets new state of path node and its neighbours and their neighbours and so on, according to neighbours-depth:
    ;  for neighbours-depth = 1 - path node and its neighbours, 2 - section 1 and path node neighbours neighbours and so on
    (defn get-tree-new-state [neighbours-depth path]
       (merge (for [nodep (distinct (concat (take neighbours-depth
-                                                 (iterate #(concat (for [x %] (get-neighbours-paths x)))
-                                                          (concat (get-neighbours-paths path) path)))))]
+                                                 (iterate #(concat (for [x %] (remove nil? (get-neighbours-paths x))))
+                                                          (concat (remove nil? (get-neighbours-paths path)) path)))))]
         {nodep (get-node-new-state nodep)})))
    ; query function body
    (if (= iterations-number 0)
