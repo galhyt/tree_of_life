@@ -1,3 +1,4 @@
+(ns tree-of-life.game)
 (require '[clojure.string :as str])
 
 (defn query
@@ -5,18 +6,19 @@
    ; Helper functions
    (defn get-node-value [path]
      (get tree-state path))
-   (defn get-node-new-state [path]
-     (let [neighbours (get-neighbours-paths path)]
-     (get rule (str/join "" (map #(if (= % nil) "." (get-node-value %)) (concat (take 2 neighbours) [path] (last neighbours)))))))
    (defn get-neighbours-paths [path]
      (let [parent (if (not= path []) (drop-last path) nil)
            left (concat path "<")
            right (concat path ">")]
        [parent left right]))
+   (defn get-node-new-state [path]
+    (let [neighbours (get-neighbours-paths path)]
+      (get rule (str/join "" (map #(if (= % nil) "." (get-node-value %))
+                                  (concat (take 2 neighbours) [path] (last neighbours)))))))
    ; Gets new state of path node and its neighbours and their neighbours and so on, according to neighbours-depth:
    ;  for neighbours-depth = 1 - path node and its neighbours, 2 - section 1 and path node neighbours neighbours and so on
    (defn get-tree-new-state [neighbours-depth path]
-      (merge (for [nodep (distinct (concat (take neighbours-depth
+      (into {} (for [nodep (distinct (concat (take neighbours-depth
                                                  (iterate #(concat (for [x %] (remove nil? (get-neighbours-paths x))))
                                                           (concat (remove nil? (get-neighbours-paths path)) path)))))]
         {nodep (get-node-new-state nodep)})))
@@ -35,11 +37,16 @@
         iterations-number (Integer/parseInt (input-query-arr 0))
         query-path (input-query-arr 1)
         result (query tree-state rule iterations-number query-path)]
+      (println result)
     ))
 
 (defn play-the-game-of-life []
   (defn get-rule-struct [rule-code]
-    )
+    (let [bin-vals (str/replace (str/replace
+                                  (format "%16d" (Long/parseLong (Long/toString rule-code 2)))  "1" "x") #"[\s0]" ".")
+          bin-keys (map #(str/replace (str/replace (format "%4d" (Integer/parseInt %)) "1" "x") #"[\s0]" ".")
+                        (for [i (range 15 -1 -1)] (Long/toString i 2)))]
+      (into {} (map (fn [k v] {k v}) bin-keys bin-vals))))
   (defn get-tree-state-struct [tree-state-str]
     )
   (let [input-rule-code (read-line)
@@ -51,3 +58,5 @@
         i 0]
     (while [(< i number-of-queries)]
       [(play-query tree-state rule)])))
+
+(play-the-game-of-life)
