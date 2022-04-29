@@ -1,5 +1,7 @@
-(ns tree-of-life.game)
-(require '[clojure.string :as str])
+(ns tree-of-life.game
+  (:import (clojure.lang PersistentList)))
+(require '[clojure.string :as str]
+         '[clojure.edn :as edn])
 
 (defn query
   [tree-state rule iterations-number path]
@@ -8,8 +10,8 @@
      (get tree-state path))
    (defn get-neighbours-paths [path]
      (let [parent (if (not= path []) (drop-last path) nil)
-           left (concat path "<")
-           right (concat path ">")]
+           left (conj path "<")
+           right (conj path ">")]
        [parent left right]))
    (defn get-node-new-state [path]
     (let [neighbours (get-neighbours-paths path)]
@@ -21,7 +23,7 @@
       (into {} (for [nodep (distinct (concat (take neighbours-depth
                                                  (iterate #(concat (for [x %] (remove nil? (get-neighbours-paths x))))
                                                           (concat (remove nil? (get-neighbours-paths path)) path)))))]
-        {nodep (get-node-new-state nodep)})))
+                {nodep (get-node-new-state nodep)})))
    ; query function body
    (if (= iterations-number 0)
      (get-node-value path)
@@ -48,7 +50,24 @@
                         (for [i (range 15 -1 -1)] (Long/toString i 2)))]
       (into {} (map (fn [k v] {k v}) bin-keys bin-vals))))
   (defn get-tree-state-struct [tree-state-str]
-    )
+    (let [tree-state (edn/read-string tree-state-str)
+          tree-depth ]
+      (into {}
+        (for [level-paths (take tree-depth
+                              (iterate #(flatten (map (fn [path] [(conj path "<") (conj path ">")]) %)) []))]
+          (for [path level-paths] (if (= path [])
+                                    {path (second tree-state)}
+                                    {path (second (nth
+                                                    (iterate #(let [index (first %) branch (last %) dir (path index)]
+                                                                (if (= index (dec (count path)))
+                                                                  [-1 (second branch)]
+                                                                  (if (= dir "<")
+                                                                    [(+ index 1) (first branch)]
+                                                                    (if (= dir ">")
+                                                                      [(+ index 1) (last branch)]
+                                                                      ))))
+                                                              [0 tree-state]) (dec (count path))))}))))))
+  ; Body of play-the-game-of-life function
   (let [input-rule-code (read-line)
         input-tree-start-state (read-line)
         input-number-of-queries (read-line)
@@ -58,5 +77,3 @@
         i 0]
     (while [(< i number-of-queries)]
       [(play-query tree-state rule)])))
-
-(play-the-game-of-life)
