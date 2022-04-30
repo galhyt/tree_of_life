@@ -34,10 +34,10 @@
            (recur tree-new-state rule (- iterations-number 1) path)))))
 
 (defn play-query [tree-state rule]
-  (let [input-query read-line
+  (let [input-query (read-line)
         input-query-arr (str/split input-query #" ")
         iterations-number (Integer/parseInt (input-query-arr 0))
-        query-path (input-query-arr 1)
+        query-path (edn/read-string (input-query-arr 1))
         result (query tree-state rule iterations-number query-path)]
       (println result)
     ))
@@ -51,29 +51,31 @@
       (into {} (map (fn [k v] {k v}) bin-keys bin-vals))))
   (defn get-tree-state-struct [tree-state-str]
     (let [tree-state (edn/read-string tree-state-str)
-          tree-depth ]
+          tree-depth (first (first (filter #(not= (type (second %)) PersistentList)
+                                     (iterate #(let [index (first %) branch (second %)]
+                                                 [(inc index) (first branch)]) [0 tree-state]))))]
       (into {}
-        (for [level-paths (take tree-depth
-                              (iterate #(flatten (map (fn [path] [(conj path "<") (conj path ">")]) %)) []))]
-          (for [path level-paths] (if (= path [])
-                                    {path (second tree-state)}
-                                    {path (second (nth
-                                                    (iterate #(let [index (first %) branch (last %) dir (path index)]
-                                                                (if (= index (dec (count path)))
-                                                                  [-1 (second branch)]
-                                                                  (if (= dir "<")
-                                                                    [(+ index 1) (first branch)]
-                                                                    (if (= dir ">")
-                                                                      [(+ index 1) (last branch)]
-                                                                      ))))
-                                                              [0 tree-state]) (dec (count path))))}))))))
+        (let [level-paths
+              (apply concat (take tree-depth
+                                           (iterate #(apply concat (map (fn [path] [(conj path "<") (conj path ">")]) %)) [[]])))]
+          (for [path level-paths]
+            (if (= path [])
+              {path (first tree-state)}
+              {path (second (nth
+                              (iterate #(let [index (first %) branch (last %) dir (path index)]
+                                          (if (= index (dec (count path)))
+                                            [(inc index) (second branch)]
+                                            (if (= dir "<")
+                                              [(inc index) (first branch)]
+                                              (if (= dir ">")
+                                                [(inc index) (last branch)]))))
+                                        [0 tree-state]) (dec (count path))))}))))))
   ; Body of play-the-game-of-life function
   (let [input-rule-code (read-line)
         input-tree-start-state (read-line)
         input-number-of-queries (read-line)
-        rule (get-rule-struct input-rule-code)
+        rule (get-rule-struct (Integer/parseInt input-rule-code))
         tree-state (get-tree-state-struct input-tree-start-state)
-        number-of-queries (Integer/parseInt input-number-of-queries)
-        i 0]
-    (while [(< i number-of-queries)]
-      [(play-query tree-state rule)])))
+        number-of-queries (Integer/parseInt input-number-of-queries)]
+    (dotimes [i number-of-queries]
+      (play-query tree-state rule))))
