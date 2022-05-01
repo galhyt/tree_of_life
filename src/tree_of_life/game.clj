@@ -15,7 +15,7 @@
    (defn get-node-new-state [path]
     (let [neighbours (get-neighbours-paths path)]
       (get rule (str/join "" (map #(if (= % nil) "." (get-node-value %))
-                                  (conj (take 2 neighbours) path (last neighbours)))))))
+                                  (conj (into [] (take 2 neighbours)) path (last neighbours)))))))
    ; Gets new state of path node and its neighbours and their neighbours and so on, according to neighbours-depth:
    ;  for neighbours-depth = 1 - path node and its neighbours, 2 - section 1 and path node neighbours neighbours and so on
    (defn get-tree-new-state [neighbours-depth path]
@@ -80,4 +80,4 @@
     (dotimes [i number-of-queries]
       (play-query tree-state rule))))
 
-;(play-the-game-of-life)
+(play-the-game-of-life)
