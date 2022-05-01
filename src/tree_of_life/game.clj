@@ -72,7 +72,7 @@
 
 (defn game-of-life
   ; Takes raw inputs and return results
-  ([rule-code tree-state-str queries-strs]
+  ([tree-state-str rule-code queries-strs]
     (let [queries (for [query-str queries-strs :let [query-str-arr (str/split query-str #" ")
                                                      iterations-number (Integer/parseInt (first query-str-arr))
                                                      query-path (second query-str-arr)]]
@@ -80,10 +80,10 @@
                      "query-path" query-path
                      "result" (game-of-life rule-code tree-state-str iterations-number query-path)})]
       queries))
-  ([rule-code tree-state-str iterations-number query-path-str]
+  ([tree-state-str rule-code iterations-number query-path-str]
    (let [rule (get-rule-struct (Integer/parseInt rule-code))
          tree-state (get-tree-state-struct tree-state-str)
-         query-path (edn/read-string (query-path-str 1))]
+         query-path (into [] (map str (edn/read-string query-path-str)))]
      (query tree-state rule iterations-number query-path))))
 
 (defn play-the-game-of-life []
@@ -93,10 +93,11 @@
         input-tree-start-state (read-line)
         input-number-of-queries (read-line)
         number-of-queries (Integer/parseInt input-number-of-queries)]
-    (dotimes [i number-of-queries :let [input-query (read-line)
-                                        query-str-arr (str/split input-query #" ")
-                                        iterations-number (Integer/parseInt (first query-str-arr))
-                                        query-path (second query-str-arr)]]
-      (game-of-life input-tree-start-state input-rule-code iterations-number query-path))))
+    (dotimes [i number-of-queries]
+      (let [input-query (read-line)
+             query-str-arr (str/split input-query #" ")
+             iterations-number (Integer/parseInt (first query-str-arr))
+             query-path (second query-str-arr)]
+        (game-of-life input-tree-start-state input-rule-code iterations-number query-path)))))
 
 (play-the-game-of-life)
