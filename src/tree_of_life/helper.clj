@@ -1,5 +1,4 @@
-(ns tree-of-life.helper
-  (:import (clojure.lang PersistentList)))
+(ns tree-of-life.helper)
 (require '[clojure.string :as str]
          '[clojure.edn :as edn])
 
@@ -39,26 +38,28 @@
 
 (defn get-tree-state-struct [tree-state-str]
       ; Helper function
-      (let [tree-state (map str (edn/read-string tree-state-str))
-            tree-depth (first (first (filter #(string? (type %))
-                                             (iterate #(let [index (first %) branch (second %)]
-                                                            [(inc index) (first branch)])
-                                                      [1 tree-state]))))]
-        (if (= (count tree-state) 1)
-          {[] (first tree-state)}
-          (into {}
-               (let [paths
-                     (apply concat (take tree-depth
-                                         (iterate #(apply concat (map (fn [path] [(conj path "<") (conj path ">")]) %)) [[]])))]
-                 (for [path paths]
-                   (if (= path [])
-                     {path (second tree-state)}
-                     {path (second (nth
-                                     (iterate #(let [index (first %) branch (last %) dir (path index)]
-                                                 (if (= index (count path))
-                                                   [(inc index) (if (= (type branch) PersistentList) (second branch) branch)]
-                                                   (if (= dir "<")
-                                                     [(inc index) (first branch)]
-                                                     (if (= dir ">")
-                                                       [(inc index) (last branch)]))))
-                                              [0 tree-state]) (count path)))})))))))
+  (let [tree-state (map str (edn/read-string tree-state-str))]
+    (if (= (count tree-state) 0)
+    {}
+    (let [tree-depth (first (first (filter #(string? (second %))
+                                           (iterate #(let [index (first %) branch (second %)]
+                                                       [(inc index) (first branch)])
+                                                    [1 tree-state]))))]
+      (if (= (count tree-state) 1)
+        {[] (first tree-state)}
+        (into {}
+              (let [paths
+                    (apply concat (take tree-depth
+                                        (iterate #(apply concat (map (fn [path] [(conj path "<") (conj path ">")]) %)) [[]])))]
+                (for [path paths]
+                  (if (= path [])
+                    {path (second tree-state)}
+                    {path (second (nth
+                                    (iterate #(let [index (first %) branch (last %) dir (path index)]
+                                                (if (= index (count path))
+                                                  [(inc index) (if (string? branch) branch (second branch))]
+                                                  (if (= dir "<")
+                                                    [(inc index) (first branch)]
+                                                    (if (= dir ">")
+                                                      [(inc index) (last branch)]))))
+                                             [0 tree-state]) (count path)))})))))))))
