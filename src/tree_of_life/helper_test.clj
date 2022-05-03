@@ -7,12 +7,12 @@
 (deftest get-tree-state-struct-test []
          (let [tree-state-tests {"()" {}
                                 "(x)" {[] "x"}
-                                "(. x .)" {[] "x" ["<"] "." [">"] "."}}]
-           (doseq [[input result] tree-state-tests :while (not (nil? input))]
+                                "(. x .)" {[] "x" ["<"] "." [">"] "."}
+                                 "((x x (. . x)) . ((x x .) . x))" {[] "." ["<" "<"] "x" ["<"] "x" ["<" ">"] "." ["<" ">" "<"] "." ["<" ">" ">"] "x"
+                                                                    [">"] "." [">" ">"] "x" [">" "<"] "x" [">" "<" "<"] "x" [">" "<" ">"] "."}}]
+           (doseq [[input result] tree-state-tests]
              (is (= (get-tree-state-struct input) result)))))
 
-(deftest f []
-         (is (= 5 (+ 1 4))))
 ;(defn tree-state [test-function]
 ;  )
 
