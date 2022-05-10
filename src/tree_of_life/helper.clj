@@ -4,8 +4,17 @@
          '[clojure.edn :as edn])
 
 (defn get-node-value [tree-state path]
-      ; Helper function
-      (get tree-state path))
+  ; Helper function
+  (if (= path [])
+    (str (second tree-state))
+    (second (nth (iterate #(let [path (first %)
+                                next-path (drop 1 path)
+                                dir (first path)
+                                branch ((if (= dir "<") first last) (last %))]
+                             [next-path (if (= (count next-path) 0)
+                                          (str (if (not (instance? ISeq branch)) branch (second branch))) branch)])
+                          [path tree-state])
+                    (count path)))))
 
 (defn get-neighbours-paths [path]
       ; Helper function
@@ -36,32 +45,3 @@
             bin-keys (map #(str/replace (str/replace (format "%4d" (Integer/parseInt %)) "1" "x") #"[\s0]" ".")
                           (for [i (range 15 -1 -1)] (Long/toString i 2)))]
            (into {} (map (fn [k v] {k v}) bin-keys bin-vals))))
-
-(defn get-tree-state-struct [tree-state-str]
-  ; Helper function
-  (let [tree-state (edn/read-string tree-state-str)]
-    (if (= (count tree-state) 0)
-    {}
-    (let [tree-depth (first (first (filter #(not (instance? ISeq (second %)))
-                                           (iterate #(let [index (first %) branch (second %)]
-                                                       [(inc index) (first branch)])
-                                                    [1 tree-state]))))]
-      (if (= (count tree-state) 1)
-        {[] (str (first tree-state))}
-        (into {}
-              (let [paths
-                    (into [] (apply concat (take (inc tree-depth)
-                                             (iterate #(apply concat (map (fn [path] [(conj path "<") (conj path ">")]) %)) [[]]))))]
-                (for [path paths]
-                  (if (= path [])
-                    {path (str (second tree-state))}
-                    {path (second (nth
-                                    (iterate #(let [path (first %)
-                                                    next-path (drop 1 path)
-                                                    dir (first path)
-                                                    branch ((if (= dir "<") first last) (last %))]
-                                                [next-path (if (= (count next-path) 0)
-                                                             (str (if (not (instance? ISeq branch)) branch (second branch)))
-                                                             branch)])
-                                             [path tree-state])
-                                    (count path)))})))))))))

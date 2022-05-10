@@ -2,7 +2,7 @@
 (require '[clojure.string :as str]
          '[clojure.edn :as edn]
          '[tree-of-life.helper :refer [get-node-value get-node-new-state get-tree-new-state
-                                       get-rule-struct get-tree-state-struct]])
+                                       get-rule-struct]])
 
 (defn query [tree-state rule iterations-number path]
    (if (= iterations-number 0)
@@ -25,7 +25,7 @@
       queries))
   ([tree-state-str rule-code iterations-number query-path-str]
    (let [rule (get-rule-struct (Integer/parseInt rule-code))
-         tree-state (get-tree-state-struct tree-state-str)
+         tree-state (edn/read-string tree-state-str)
          query-path (into [] (map str (edn/read-string query-path-str)))]
      (query tree-state rule iterations-number query-path))))
 
