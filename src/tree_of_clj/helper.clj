@@ -1,4 +1,4 @@
-(ns tree-of-life.helper
+(ns tree-of-clj.helper
   (:require))
 
 (def * ".")
