@@ -15,6 +15,7 @@
            (doseq [[input result] tree-state-tests]
              (is (= (get-tree-state-struct input) result)))))
 
+
 ;(defn tree-state [test-function]
 ;  )
 
