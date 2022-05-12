@@ -1,7 +1,5 @@
 (ns tree-of-clj.helper)
 
-(def o ".")
-(def x "x")
 (def < "<")
 (def > ">")
 
@@ -14,14 +12,14 @@
 
 (defn- get-node-value [node]
   (if (= node nil)
-    o
+    "."
     (if (seq? node)
       (get-node-value (second node))
       node)))
 
 (defn iterate-on-tree
   ([tree rule]
-   (iterate-on-tree tree rule o))
+   (iterate-on-tree tree rule "."))
   ([tree rule parent-value]
    (let [left-child (if (seq? tree) (first tree) nil)
          right-child (if (seq? tree) (last tree) nil)

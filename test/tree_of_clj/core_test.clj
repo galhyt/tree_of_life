@@ -1,36 +1,53 @@
 (ns tree-of-clj.core-test
   (:require
     [clojure.test :refer :all]
-    [tree-of-clj.helper :refer [get-value-by-path < > o x
-                                iterate-on-tree]]))
+    [tree-of-clj.helper :refer [get-value-by-path < >
+                                iterate-on-tree]]
+    [clojure.string :as str]
+    [clojure.edn :as edn]))
 
-(def trees ['(x o x)
-           '((x o x) o ((x x o) x o))])
+(def trees ["(x . x)"
+           "((x . x) . ((x x .) x .))"])
 
-(def rule-dict {'(x x x x) 'x
-     '(x x x o) 'o
-     '(x x o x) 'o
-     '(x x o o) 'x
-     '(x o x x) 'x
-     '(x o x o) 'o
-     '(x o o x) 'o
-     '(x o o o) 'x
-     '(o x x x) 'x
-     '(o x x o) 'o
-     '(o x o x) 'o
-     '(o x o o) 'x
-     '(o o x x) 'x
-     '(o o x o) 'o
-     '(o o o x) 'o
-     '(o o o o) 'x})
+(def rule-dict {"(x x x x)" "x"
+     "(x x x .)" "."
+     "(x x . x)" "."
+     "(x x . .)" "x"
+     "(x . x x)" "x"
+     "(x . x .)" "."
+     "(x . . x)" "."
+     "(x . . .)" "x"
+     "(. x x x)" "x"
+     "(. x x .)" "."
+     "(. x . x)" "."
+     "(. x . .)" "x"
+     "(. . x x)" "x"
+     "(. . x .)" "."
+     "(. . . x)" "."
+     "(. . . .)" "x"})
 
-(deftest get-value-by-path-test []
-    (is (= (get-value-by-path '(o x o) [>]) 'o))
-    (is (= (get-value-by-path '((x x o) x o) [<]) 'x))
-    (is (= (get-value-by-path '((x o x) o ((x x o) x o)) [> < >]) 'o)))
+(defn str_to_list [text]
+  (def lst (edn/read-string text))
+  (if (seq? lst)
+    (let [root (str (second lst))
+          left (str (first lst))
+          right (str (last lst))]
+      (list (str_to_list left) root (str_to_list right)))
+    (str lst)))
 
 (defn rule [p l c r]
-  (rule-dict '(p l c r)))
+  (rule-dict (str "(" (str/join " " [p l c r]) ")")))
+
+(deftest rule-test []
+  (is (= (rule "." "x" "." "x") ".")))
+
+(deftest str_to_list-test []
+  (is (= (str_to_list "(. x .)") '("." "x" "."))))
+
+(deftest get-value-by-path-test []
+  (is (= (get-value-by-path (str_to_list "(. x .)") [>]) "."))
+  (is (= (get-value-by-path (str_to_list "((x x .) x .)") [<]) "x"))
+  (is (= (get-value-by-path (str_to_list "((x . x) . ((x x .) x .))") [> < >]) ".")))
 
 (deftest iterate-on-tree-test []
-    (is (= (iterate-on-tree (trees 0) rule) '(o x x))))
+  (is (= (iterate-on-tree (str_to_list (trees 0)) rule) (str_to_list "(. . .)"))))
