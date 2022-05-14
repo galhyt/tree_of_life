@@ -35,3 +35,7 @@
              new-value
              (iterate-on-tree right-child rule current-node-value))
        new-value))))
+
+(defn iterations-on-tree [tree-state rule iterations-number]
+   (nth (iterate #(iterate-on-tree % rule) tree-state)
+        iterations-number))

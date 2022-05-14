@@ -2,7 +2,9 @@
   (:require
     [clojure.test :refer :all]
     [tree-of-clj.helper :refer [get-value-by-path < >
-                                iterate-on-tree]]
+                                iterate-on-tree
+                                iterations-on-tree]]
+    [tree-of-clj.core :refer [query]]
     [clojure.string :as str]
     [clojure.edn :as edn]))
 
@@ -50,4 +52,21 @@
   (is (= (get-value-by-path (str_to_list "((x . x) . ((x x .) x .))") [> < >]) ".")))
 
 (deftest iterate-on-tree-test []
-  (is (= (iterate-on-tree (str_to_list (trees 0)) rule) (str_to_list "(. . .)"))))
+  (is (= (iterate-on-tree (str_to_list (trees 0)) rule) (str_to_list "(. . .)")))
+  (is (= (iterate-on-tree (str_to_list (trees 1)) rule) (str_to_list "((. . .) . ((. . x) . x))"))))
+
+(deftest iterations-on-tree-test []
+   (is (= (iterations-on-tree (str_to_list (trees 1)) rule 0) (str_to_list (trees 1))))
+   (is (= (iterations-on-tree (str_to_list (trees 1)) rule 1) (str_to_list "((. . .) . ((. . x) . x))")))
+   (is (= (iterations-on-tree (str_to_list (trees 1)) rule 2) (str_to_list "((x x x) x ((x . .) . .))"))))
+
+(deftest query-test []
+   (is (= (query (str_to_list "(. x .)") rule 0 []) "x"))
+   (is (= (query (str_to_list "(. x .)") rule 0 [<]) "."))
+   (is (= (query (str_to_list (trees 0)) rule 1 []) "."))
+   (is (= (query (str_to_list (trees 0)) rule 1 [>]) "."))
+   (is (= (query (str_to_list (trees 1)) rule 1 []) "."))
+   (is (= (query (str_to_list (trees 1)) rule 1 [<]) "."))
+   (is (= (query (str_to_list (trees 1)) rule 1 [>]) "."))
+   (is (= (query (str_to_list (trees 1)) rule 2 []) "x"))
+   (is (= (query (str_to_list (trees 1)) rule 2 [> < <]) "x")))
